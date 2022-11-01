@@ -2,12 +2,28 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 
 type Data = {
-  name: string
+  message: string
 }
 
-export default function handler(
+type Error = {
+  errorMessage: string
+}
+
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+
+export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<Data>
+  res: NextApiResponse<Data | Error>
 ) {
-  res.status(200).json({ name: 'John Doe' })
+  const {query} = req;
+  const code = typeof query.code === 'string' ? Number.parseInt(query.code) : 500;
+  if (code === 500 || Number.isNaN(code)) {
+    res.status(500).json({errorMessage: 'Invalid query params'})
+    return;
+  }
+  const message = typeof query.message === 'string' ? query.message : 'Hello';
+  if (message === 'wait') {
+    await delay(5_000)
+  }
+  res.status(code).json({ message })
 }
